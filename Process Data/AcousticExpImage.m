@@ -12,7 +12,7 @@ phi=@(t) 2*pi*(f0*t+(f1-f0)/(2*tau).*t.^2);
 % 
 % phi=@(t,r) 2*pi*(f0*t+(f1-f0)/(2*tau).*t.^2);
 
-phi_r=@(t,r) -(2*pi/c)*(f0+(f1+f0)/(2*tau).*t).*r;
+% phi_r=@(t,r) -(2*pi/c)*(f0+(f1+f0)/(2*tau).*t).*r;
 
 
 chirp = @(t,phi) ((t<(T-tau)/2 | t>(T+tau)/2).*0 ...
@@ -184,7 +184,7 @@ Ly=Y(end,1)-Y(1,1);
 
 %choose frequencies
 choosefreq=find(freqs>16000 & freqs<18900);
-choosefreq=choosefreq(1:10:end);
+choosefreq=choosefreq(1:100:end);
 
 measurements=zeros([size(Experiment),size(Experiment{1,1})]);
 measurement_t_offset=zeros(size(ExperimentFFT));
@@ -274,8 +274,9 @@ title('K-Space Imag(P)')
 
 k0=2*pi*singleFreq/c
 kzs=real(sqrt(k0.^2-kx.^2-ky.^2));
+
 for zd=0:-.005:-.6
-Exy=(ifft2(fftshift(Ekxky.*exp(-1j*kzs*zd))));
+Exy=(ifft2(fftshift(Ekxky.*exp(-1j*kzs*zd)))); %why neg sign ??????
 
 imagesc(abs(Exy))
 axis equal; axis tight;
