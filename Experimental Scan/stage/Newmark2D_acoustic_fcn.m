@@ -20,15 +20,16 @@ dbstop if error
 % end
 
 %% initialize Chirp
-dt=1/44.1E3;       %44 KHz sampling rate
-T=2.2;               %Total Signal time 
-t=(0:dt:T-dt); 
+SamplingRate=44.1E3;
+dt=1/SamplingRate;       %44 KHz sampling rate
 
 %chirp
 f0    = (7E3);       %start
 f1    = (20E3);      %stop
 tau   = 2;           %chirp ramp time
-t_tau = 0:dt:tau;    
+T=tau+0.5;           %Total Signal time 
+t=(0:dt:T-dt); 
+ 
 signal = zeros(size(t));
 
 %linear chirp function
@@ -123,7 +124,7 @@ chOut=addAudioOutputChannel(s, devSpeaker.ID, 1:noutchan);
 chIn=addAudioInputChannel(s, devMic.ID, 1:ninchan);
 
 %set sampling rate
-s.Rate = 44.1E3;
+s.Rate = SamplingRate;
 
 plotFFT = @(src, event) fftData(event.Data, src.Rate,src.NotifyWhenDataAvailableExceeds, hp_ch1_tdomain, hp_ch1_fdomain, hp_ch2_tdomain, hp_ch2_fdomain);
 % test= @(src, event) assignin('base','micData', event.Data);
@@ -212,13 +213,12 @@ data.chirp.dt=dt;
 data.chirp.t=t;
 data.chirp.f0=f0;
 data.chirp.f1=f1;
-data.chirp.t_tau=t_tau;
 data.chirp.tau=tau;
-data.chirp.chirp_sig=signal;
-data.chirp.amplitude=amplitude;
-data.samplingRate=s.Rate;
+data.chirp.signal=signal;
+data.samplingRate=SamplingRate;
+data.note.order='Data ordered in cells as (yn,xn)';
 
-save(['C:\Users\Floor 1 Imager\Desktop\NFS data\Acoustic\results-' date],'data','-v7.3')
+save(['D:\Acoustic Scanning Data\results-' date],'data','-v7.3')
 
  delete(h2);
  
