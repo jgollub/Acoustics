@@ -28,11 +28,11 @@ f0    = (7E3);       %start
 f1    = (20E3);      %stop
 tau   = 0.205;           %chirp ramp time
 
-T_instrDelay=.2;  %delay in start of chirp by instrument
-T_startJitter=0.0152; % variation in start or chirp
-T_range=0.018; % 3 m range
-T_delay=0; %extra delay
-T=tau+T_delay+T_range+T_startJitter+T_instrDelay;           %Total Signal time chirp+roundtrip+instrument delay+start_delay
+T_instrDelay=.2;
+T_startjitter=0.0152;
+T_range=0.018;
+T_delay=0;
+T=tau+T_delay+T_range+T_jitter+T_instrDelay;           %Total Signal time chirp+roundtrip+instrument delay+start_delay
 t=(0:dt:T-dt); 
  
 signal = zeros(size(t));
@@ -207,11 +207,10 @@ end
 %         imagesc(abs(measurements(:,:,round(length(measurements(1,1,:))/2))))
 %     end
 
-%save data
+
 data.X = X;
 data.Y = Y;
 data.measurements = measurements;
-
 data.chirp.T=T;
 data.chirp.dt=dt;
 data.chirp.t=t;
@@ -219,11 +218,6 @@ data.chirp.f0=f0;
 data.chirp.f1=f1;
 data.chirp.tau=tau;
 data.chirp.signal=signal;
-data.chirp.T_instrDelay=T_instrDelay; 
-data.chirp.T_startJitter=T_startJitter; 
-data.chirp.T_range=T_range;
-data.chirp.T_delay=T_delay;
-
 data.samplingRate=SamplingRate;
 data.note.order='Data ordered in cells as (yn,xn)';
 
