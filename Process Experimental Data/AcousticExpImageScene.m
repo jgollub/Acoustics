@@ -73,23 +73,42 @@ c=343; % speed of sound m/s
 % load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\',...
 %                  'SAS of 16oz Can 5-1-2017\results-29-Apr-2017_16OzCan.mat']);              
 % 
-% load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\',...
-%                  'Duke Target\results-20-May-2017_DUtarget.mat']); 
-
-
 load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\',...
-                 'Duke Target\Second Run\results-26-May-2017_CopperCylinder.mat']); 
+                 'Duke Target\results-20-May-2017_DUtarget.mat']); 
 
+
+% load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\',...
+%                  'Duke Target\Second Run\results-26-May-2017_CopperCylinder.mat']); 
+% 
+% load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\Cylinder\',...
+%                  'results-04-Jun-2017_Cylinder_ShortChirp.mat']); 
+             
+
+                        
 %chirp Info
 T=data.chirp.T;
 t=data.chirp.t;
 f0=data.chirp.f0;
 f1=data.chirp.f1;
-% signal=data.chirp.chirp_sig;
+%  signal=data.chirp.chirp_sig;
 signal=data.chirp.signal;
 tau=data.chirp.tau;
 srate=data.samplingRate;
 dt=t(2)-t(1);
+data.chirp.instrDelay=.2;
+% 
+% figure(1); subplot(2,1,1); hold on; plot(t,data.measurements{ceil(end/2),ceil(end/2)}(:,1)); drawnow;
+%         
+% indxKeep=find(t>data.chirp.instrDelay);
+% if length(indxKeep)
+%     indxKeep=[indxKeep(1)-1,indxKeep];
+% end
+% 
+% data.measurements=cellfun(@(x) x(indxKeep,:),data.measurements,'UniformOutput',false); 
+% t=t(indxKeep);
+% T=t(end)-t(1);
+% 
+% plot(t,data.measurements{ceil(end/2),ceil(end/2)}(:,1));
 
 %frequencies
 freqs=0:1/T:(srate/2)-1/T; % standard srate=44.1KHz
@@ -103,11 +122,8 @@ chirp = @(t,phi) ((t<(T-tau)/2 | t>(T+tau)/2).*0 ...
 
 %%
 
-
-
-
 choosefreq=find(freqs>10000 & freqs<17591);
-choosefreq=choosefreq(1:100:end);
+choosefreq=choosefreq(1:2:end);
 
 X=-data.X/1000; %!!!!!!!!!!!!note NEGATIVE sign due to moving target instead of target
 dx=X(1,2)-X(1,1); %make sure dx is positive
@@ -141,7 +157,8 @@ for nx=1:size(data.measurements,2)
         measurement_t_offset(ny,nx)=dt*indx;
         
         FFTtdata=fft(tData(:,1));
-         FFTtdata=FFTtdata(1:end/2);
+        FFTtdata=FFTtdata(1:end/2);
+
         for nf=choosefreq
             temp=temp+1;
             %note time shift is phase shift in frequency domain
@@ -156,13 +173,21 @@ toc
 % load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\',...
 %                 'SAS of 16oz Can 5-1-2017\results-29-Apr-2017_BkGrnd.mat']);
             
-% load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\',...
-%                 'Duke Target\results-19-May-2017_background.mat']);
-
 load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\',...
-                'Duke Target\Second Run\results-27-May-2017_bkgrnd.mat']);
+                'Duke Target\results-19-May-2017_background.mat']);
 
+% load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\',...
+%                 'Duke Target\Second Run\results-27-May-2017_bkgrnd.mat']);
+% 
+% load(['D:\Dropbox (Duke Electric & Comp)\MetaImager Data\Acoustic Data\Cylinder\',...
+%                 'results-04-Jun-2017_BkGrndShortChirp.mat']);
 
+% figure(1); subplot(2,1,2); hold on; plot(data.chirp.t,data.measurements{ceil(end/2),ceil(end/2)}(:,1));
+% data.measurements=cellfun(@(x) x(indxKeep,:),data.measurements,'UniformOutput',false); %%%  
+% 
+% 
+% plot(t,data.measurements{ceil(end/2),ceil(end/2)}(:,1));
+            
 Bkg_measurements=zeros([size(data.measurements),size(data.measurements{1,1},1)]);
 Bkg_measurements_t_offset=zeros(size(data.measurements));
 backgroundFFT=zeros([size(data.measurements),length(choosefreq)]);
@@ -188,6 +213,7 @@ for nx=1:size(data.measurements,2)
         
         FFTtdata=fft(tData(:,1));
          FFTtdata=FFTtdata(1:end/2);
+                 
         for nf=choosefreq
             temp=temp+1;
             %note time shift is phase shift in frequency domain
@@ -397,7 +423,7 @@ BW=f(end)-f(1);
 
 
 %% propagate fields single frequency
-nn=80;
+nn=ceil(length(f)/1.1);
 singleFreqData=targetMeasurement(:,:,nn);
 singleFreq=f(nn);
 
@@ -450,7 +476,7 @@ k0=2*pi*singleFreq/c;
 kzs=real(sqrt((2*k0).^2-kx.^2-ky.^2));
 
 figure(11);
-zd=.2:.005:.8;
+zd=.1:.005:.8;
 
 for ii=1:length(zd)
 Exy=(ifft2(fftshift(Ekxky.*exp(1j*kzs*zd(ii))))); %wave is traveling into -z henze positive phase to reverse
@@ -554,7 +580,7 @@ end
 %% Range Migration
 z_p=0.6; 
 
-nn=70;
+nn=ceil(size(targetMeasurement,3)/2);
 %upsample in x and y
 
 pad=2^(nextpow2(max(numel(X(1,:)),numel(Y(:,1)))));
@@ -597,7 +623,7 @@ shiftx=dx*(pad/2-ceil(xnum/2));
 shifty=dy*(pad/2-ceil(ynum/2));
 
 %padding adds zeros at end of both dimensions, we must phase shift such that panel is centered
-Skxky=Skxky.*exp(-1.0j*kux*(shiftx)).*exp(-1.0j*kuy*(shifty));
+Skxky=Skxky.*exp(-1.0j*kux(:,:,:)*(shiftx)).*exp(-1.0j*kuy(:,:,:)*(shifty));
 
 %plot decomposition
 magorphase=@(x) abs(x);
@@ -646,7 +672,7 @@ set(figZX,'Position',scrn); clf;
 %calculate min max kz wavenumber
 % Kz=2*k;
 kuz=real(sqrt((2*k).^2-(kux).^2-(kuy).^2));
-%  Kz=linspace(min(kuz(:)),max(kuz(:)),size(measurementsfft,3));
+%  Kz=linspace(-max(kuz(:)),max(kuz(:)),size(measurementsfft,3));
  Kz=linspace(min(kuz(:)),max(kuz(:)),size(targetMeasurement,3));
 
  %after matched filter (phase center correction)
@@ -702,63 +728,70 @@ clear keep
 for ii=1:size(kux,2)
     for jj=1:size(kuy,1)
         kRealIndx=find(kuz(jj,ii,:));
-%         if numel(kRealIndx)>2
+        if numel(kRealIndx)>2
                         
             StoltInterp=interp1(squeeze(kuz(jj,ii,kRealIndx)),... %calculate Kz values on a regular grid
                 squeeze(Skxky(jj,ii,kRealIndx)),... 
                 squeeze(Kz),'nearest');
             
              keep=~isnan(StoltInterp);
-% 
+% % 
 %              Srmg(jj,ii,keep)= ...
 %                 squeeze(2*pi./(1j*Kz(keep)))... %matched Filter Term
 %                 .*StoltInterp(keep);
           
-                       Srmg(jj,ii,keep)=StoltInterp(keep);
+                       Srmg(jj,ii,keep)=StoltInterp(keep); %W/O MF Term
                        
 %                        figure(22); 
 %                       plot(squeeze(kuz(jj,ii,kRealIndx)),abs(squeeze(Skxky(jj,ii,kRealIndx))), 'k',...
 %                           Kz,squeeze(abs(Srmg(jj,ii,:))),'--r') 
+        end
     end
 end
 
 
 % Srmg(find(isnan(Srmg))) = 0; %set all Nan values to 0
 
-figure(21);
-%    for nn=1:length(Kz)
-    subplot(3,2,5)
-    zpos=linspace(0,2*pi/(Kz(2)-Kz(1)),length(Kz));
-    imagesc(-(-Lx_pad/2:abs(dx):Lx_pad/2),-(-Ly_pad/2:abs(dy):Ly_pad/2),magorphase(ifft2(ifftshift(Srmg(:,:,nn)))));
-    axis tight; axis equal; axis xy;
-    strTitle=sprintf('fields x-y, post MF, Stolt Interp \n z = %.3g (m) ',zpos(nn));
-    title(strTitle);
-    drawnow;
-    subplot(3,2,6)
-    imagesc(abs(kux(1,:)),abs(kuy(:,1)),magorphase(Srmg(:,:,nn)));
-    title('k-space x-y, post MF'); axis tight; axis equal; axis xy;
-    drawnow; pause(.1);
-%   end
-% for nn=1:length(f)
-    figure(figZX)
-    subplot(3,2,5);
-    imagesc(linspace(0,c/(2*(f(2)-f(1))),length(Kz)),-(-Ly_pad/2:abs(dy):Ly_pad/2),magorphase(ifft2(squeeze(ifftshift(Srmg(floor(end/2),:,:))))));
-    axis tight; xlabel('x (m)'); ylabel('freq');axis xy;
-    strTitle=sprintf('fields X-f after MF, after Stolt Interp');
-    title(strTitle);
-    drawnow;
-    
-    subplot(3,2,6);
-    imagesc(Kz,kuy(:,1),magorphase(squeeze(Srmg(floor(end/2),:,:))));
-    title('K-space after MF, after Stolt Interp'); axis tight; xlabel('kz (1/m)'); ylabel('ky (1/m)'), axis xy;
-    drawnow; pause(.1);
-% end
+% figure(21);
+% %    for nn=1:length(Kz)
+%     subplot(3,2,5)
+%     zpos=linspace(0,2*pi/(Kz(2)-Kz(1)),length(Kz));
+%     imagesc(-(-Lx_pad/2:abs(dx):Lx_pad/2),-(-Ly_pad/2:abs(dy):Ly_pad/2),magorphase(ifft2(ifftshift(Srmg(:,:,nn)))));
+%     axis tight; axis equal; axis xy;
+%     strTitle=sprintf('fields x-y, post MF, Stolt Interp \n z = %.3g (m) ',zpos(nn));
+%     title(strTitle);
+%     drawnow;
+%     subplot(3,2,6)
+%     imagesc(abs(kux(1,:)),abs(kuy(:,1)),magorphase(Srmg(:,:,nn)));
+%     title('k-space x-y, post MF'); axis tight; axis equal; axis xy;
+%     drawnow; pause(.1);
+% %   end
+% % for nn=1:length(f)
+%     figure(figZX)
+%     subplot(3,2,5);
+%     imagesc(linspace(0,c/(2*(f(2)-f(1))),length(Kz)),-(-Ly_pad/2:abs(dy):Ly_pad/2),magorphase(ifft2(squeeze(ifftshift(Srmg(floor(end/2),:,:))))));
+%     axis tight; xlabel('x (m)'); ylabel('freq');axis xy;
+%     strTitle=sprintf('fields X-f after MF, after Stolt Interp');
+%     title(strTitle);
+%     drawnow;
+%     
+%     subplot(3,2,6);
+%     imagesc(Kz,kuy(:,1),magorphase(squeeze(Srmg(floor(end/2),:,:))));
+%     title('K-space after MF, after Stolt Interp'); axis tight; xlabel('kz (1/m)'); ylabel('ky (1/m)'), axis xy;
+%     drawnow; pause(.1);
+% % end
 
 %apply inverst FFT to get image
-%  fxy = ifftn(fftshift(Srmg,3));
-% fxy = ifftn(fftshift(fftshift(fftshift(fftshift(Srmg,3),1),2),3));
-fxy = fftshift(ifftn(Srmg),3);
+%   fxy = (ifftn(fftshift(fftshift(fftshift(Srmg,1),2),3)));
+%     fxy = ifftshift(ifftn(fftshift(Srmg)));
+%         fxy = fftshift(ifftn((Srmg)));
 
+ fxy = (2*BW/c)*(Lx_pad*Ly_pad)*ifftshift(ifftn(Srmg,2*size(Srmg)),3);
+
+% fxy = ifftn(fftshift(fftshift(fftshift(fftshift(Srmg,3),1),2),3));
+% fxy = (2*BW/c)*(Lx_pad*Ly_pad)*ifftshift(ifftn(Srmg),3);
+
+% fxy = (2*BW/c)*(Lx_pad*Ly_pad)*fftshift(ifftn(Srmg),3);
 
 % fxy = fftshift(ifftn(fftshift(fftshift(Srmg,1),2)),3);
 image=(abs(fxy)/max(abs(fxy(:))));
@@ -825,14 +858,14 @@ xmin=min(xx);
 xmax=max(xx);
 ymin=min(yy);
 ymax=max(yy);
- zmin=.6;
- zmax=.9;
+ zmin=0.5;
+ zmax=.8;
 
 subimage=image(yy>=ymin & yy<=ymax, xx>=xmin & xx<=xmax, zz>=zmin & zz<=zmax);
 %  subimage=subimage/max(subimage(:));
     figure(20); subplot(2,1,2); cla;
     set(gcf,'color','white'); colormap('parula');
-    vol3d('Cdata',subimage.^4,...
+    vol3d('Cdata',subimage.^6.5,...
         'xdata',xx(xx>=xmin & xx<=xmax),...
         'Ydata',yy(yy>=ymin & yy<=ymax),...
         'Zdata',zz(zz>=zmin & zz<=zmax)...
