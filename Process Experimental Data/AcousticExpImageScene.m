@@ -580,6 +580,15 @@ end
 %% Range Migration
 z_p=0.6; 
 
+% micLoc_x=0;
+% micLoc_y=-.03;
+% micLoc_z=.04;
+
+
+% speakerLoc_x=0;
+% speakerLoc_y=0.03;
+% speakerLoc_z=0.04;
+
 nn=ceil(size(targetMeasurement,3)/2);
 %upsample in x and y
 
