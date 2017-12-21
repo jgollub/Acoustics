@@ -13,9 +13,6 @@ dt=t(2)-t(1);
 T=t(end)-t(1);
 
 
-
-
-
 %calculate cross correlation
 
 Gamma_yz0=zeros(length(zz),length(yy));
@@ -30,6 +27,8 @@ Ayz = mean(measurements,3);
 
 alphayz  = Ayz.*Gamma_yz0;
 betaxy   = Gamma_yz0.*conj(Gamma_yz0);
-
 %return signal not attributed to modulated scatterers
-Aprime=Ayz-alphayz./alphayz.*Gamma_yz0;
+
+figure();
+
+Aprime = Ayz-alphayz./alphayz.*Gamma_yz0;

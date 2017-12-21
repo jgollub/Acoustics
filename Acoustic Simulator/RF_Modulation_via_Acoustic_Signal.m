@@ -125,27 +125,39 @@ end
 % fsar=sum(f,2);
 %% combine measurement
 
-t = 0:0.1E-3:10e-3; %milliseconds
-dt=t(2)-t(1);
-T=t(end)-t(1);
+
+
+acoustic.f0=200;
+acoustic.f1=200;
+acoustic.t = 0:0.1E-3:10e-3; %milliseconds
+acoustic.dt=t(2)-t(1);
+acoustic.T=t(end)-t(1);
+
+f_modulation=@(t) eps*2*pi*acoustic.f0*t;
+
+acoustic.signal=real(exp(1i*f_modulation(acoustic.t))).';
 
 fig_totalRF=figure();
 fig_extracted=figure();
 fig_ExtractedRF=figure();
 
 measurements=zeros([size(measurements_target) length(t)]);
+% 
+% for eps=.5:.1:1.5;
 
-for eps=.5:.01:1.5;
-f_a=0.3E3;
-f_modulation=@(t) eps*2*pi*f_a*t;
+% measurements=repmat(measurements_target,1,1,length(acoustic.t))...
+%              +bsxfun(@times,measurements_wall,0.01*permute(exp(1.0i*f_modulation(t)),[1,3,2]));
 
-measurements=repmat(measurements_target,1,1,length(t))...
-             +bsxfun(@times,measurements_wall,permute(exp(1.0i*f_modulation(t)),[1,3,2]));
-%% apply Dan's extraction method to extract the target signal
+measurements=repmat(measurements_target,1,1,length(acoustic.t))...
+             +bsxfun(@times,measurements_wall,permute(acoustic.signal,[2,3,1]));
+
+         
+         
+         %% apply Dan's extraction method to extract the target signal
 Aprime=struct();
 [Aprime.X,Aprime.Y]=meshgrid(yy,zz);
 Aprime.f=f(1);
-Aprime.measurements=removeModulatedRFSignal(measurements,f_modulation,t,yy,zz);
+Aprime.measurements=removeModulatedRFSignal(measurements,f_modulation,acoustic.t,yy,zz);
 
 %% reconstruct
 singleFreqData=struct();
@@ -158,7 +170,7 @@ singleFreqData.f=f(nn);
 % plotSelectFields(fig_totalRF, 'up','fields',singleFreqData,nn);
 
 %calc kspace for
-singleFreqData = kComponents(singleFreqData);
+singleFreqData = kComponents(singleFreqData,'measurements',nn);
 
 % plotSelectFields(fig_totalRF, 'up','kspace',singleFreqData,nn);
 
@@ -180,9 +192,9 @@ kzs=real(sqrt((2*k0).^2-singleFreqData.kx.^2-singleFreqData.ky.^2));
 
 figure(3);
 d=1;
-singleFreqData.ExyPropagated=(ifft2(fftshift(singleFreqData.Ekxky.*exp(1j*kzs*d)))); %wave is traveling into -z henze positive phase to reverse
+singleFreqData.ExyPropagated=(ifft2(fftshift(singleFreqData.Ekxky_measurements.*exp(1j*kzs*d)))); %wave is traveling into -z henze positive phase to reverse
 
-imagesc(singleFreqData.Xupsampled(1,:),singleFreqData.Yupsampled(:,1),abs(singleFreqData.ExyPropagated))
+imagesc(singleFreqData.Xupsampled(1,:),singleFreqData.Yupsampled(:,1),angle(singleFreqData.ExyPropagated))
 axis equal; axis tight; axis xy;
 title(['xd= ', num2str(d,'%.3f')])
 set(gca,'XDir','Reverse')
@@ -194,7 +206,7 @@ pause(.2)
 
 % plotSelectFields(fig_ExtractedRF, 'down','fields',Aprime,nn);
 
-Aprime=kComponents(Aprime);
+Aprime=kComponents(Aprime,'measurements');
 
 k0=2*pi*Aprime.f(nn)/c;
 kzs=real(sqrt((2*k0).^2-Aprime.kx.^2-Aprime.ky.^2));
@@ -214,7 +226,7 @@ kzs=real(sqrt((2*k0).^2-Aprime.kx.^2-Aprime.ky.^2));
 
 figure(4);
 d=1;
-Aprime.PropagatedAxy=(ifft2(fftshift(Aprime.Ekxky.*exp(1j*kzs*d)))); %wave is traveling into -z henze positive phase to reverse
+Aprime.PropagatedAxy=(ifft2(fftshift(Aprime.Ekxky_measurements.*exp(1j*kzs*d)))); %wave is traveling into -z henze positive phase to reverse
 
 imagesc(Aprime.Xupsampled(1,:),...
         Aprime.Yupsampled(:,1),abs(Aprime.PropagatedAxy))

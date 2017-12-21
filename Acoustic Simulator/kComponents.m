@@ -1,12 +1,16 @@
-function [measurementStruct] = kComponents(measurementStruct,nn)
+function [measurementStruct] = kComponents(measurementStruct,measurementField,nn)
 
 X            = measurementStruct.X;
 Y            = measurementStruct.Y;
 
-if length(size(measurementStruct.measurements)) == 3;
-    measurements = measurementStruct.measurements(:,:,nn);
+if length(size(measurementStruct.(measurementField))) == 3
+    if length(nn)>1
+        measurements = sum(abs(measurementStruct.(measurementField)(:,:,nn)),3);
+    else
+        measurements = measurementStruct.(measurementField)(:,:,nn);
+    end
 else
-    measurements = measurementStruct.measurements;
+    measurements = measurementStruct.(measurementField);
 end
 
 dx=X(1,2)-X(1,1);
@@ -25,7 +29,7 @@ shifty=dy*(pad/2-ceil(ynum/2));
 Ekxky=circshift(fft2(measurements, pad, pad),[pad/2,pad/2]);
 Ekxky=Ekxky.*exp(-1.0j*kx*(shiftx)).*exp(-1.0j*ky*(shifty));
 
-measurementStruct.Ekxky      = Ekxky;
+measurementStruct.(['Ekxky_',measurementField])      = Ekxky;
 measurementStruct.kx         = kx;
 measurementStruct.ky         = ky;
 [measurementStruct.Xupsampled, ...

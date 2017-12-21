@@ -1,12 +1,12 @@
-function [ output_args ] = plotSelectFields(fHandle,location, type, measurementStruct,nn)
+function [ output_args ] = plotSelectFields(fHandle,location, type, measurementStruct,measField,nn)
 
 X            = measurementStruct.X;
 Y            = measurementStruct.Y;
-measurements = measurementStruct.measurements(:,:,nn);
+measurements = measurementStruct.(measField)(:,:,nn);
 f            = measurementStruct.f(nn);
 
-if isfield(measurementStruct,'Ekxky')
-    Ekxky        = measurementStruct.Ekxky;
+if isfield(measurementStruct,['Ekxky_',measField])
+    Ekxky        = measurementStruct.(['Ekxky_',measField]);
     kx           = measurementStruct.kx;
     ky           = measurementStruct.ky;
 end
